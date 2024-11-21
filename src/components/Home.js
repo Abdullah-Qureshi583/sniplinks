@@ -2,13 +2,15 @@
 import React, { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, Copy, Loader2, Link2Icon } from "lucide-react";
-import { FaCircle, FaExclamationTriangle } from "react-icons/fa";
+import { Link2, Copy, Loader2 } from "lucide-react";
+
+import {  FaExclamationTriangle } from "react-icons/fa";
 import { CiCircleCheck } from "react-icons/ci";
 import Link from "next/link";
 
 import { generateGuestShortUrl } from "@/actions/url/generateGuestShortUrl";
 import { useRouter } from "next/navigation";
+import { GoLink } from "react-icons/go";
 
 const Home = () => {
   const router = useRouter();
@@ -178,7 +180,7 @@ const Home = () => {
                   </>
                 ) : (
                   <>
-                    <Link2Icon size={16} />
+                    <GoLink  size={16} />
                     Shorten URL
                   </>
                 )}
