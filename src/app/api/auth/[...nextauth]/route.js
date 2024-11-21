@@ -4,12 +4,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
-
 import { checkUserVerified } from "@/actions/auth/checkUserVerified";
 import { saveUser } from "@/actions/auth/saveUser";
-console.log("the auth secret is ",  process.env.NEXTAUTH_SECRET)
 const handler = NextAuth({
-
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GithubProvider({
@@ -18,7 +15,7 @@ const handler = NextAuth({
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
       credentials: {
@@ -66,6 +63,10 @@ const handler = NextAuth({
         }
       }
       return false;
+    },
+
+    async redirect({ url, baseUrl }) {
+      return `${baseUrl}/dashboard`;
     },
 
     async jwt({ token, user, account }) {
