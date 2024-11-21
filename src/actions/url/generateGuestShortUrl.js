@@ -5,11 +5,12 @@ import GuestUser from "@/models/url/GuestUser";
 import TrackUser from "@/models/url/TrackUser";
 
 const generateGuestShortUrl = async (longUrl) => {
-  console.log("the guest short url will be generated with " , longUrl);
   try {
+    console.log("try block is running!");
     await connectDB();
     //check if the url is already exist in guest user if it exists return its saved shorl url
     const longUrlExist = await GuestUser.findOne({ longUrl });
+    console.log("longuser exist is  " + longUrlExist)
 
     if (longUrlExist) {
       return {
