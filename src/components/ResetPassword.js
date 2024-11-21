@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import Form from "./Form";
 import { useSearchParams } from "next/navigation";
 import { checkCode } from "@/actions/auth/checkCode";
@@ -11,15 +11,21 @@ const ResetPassword = () => {
   const params = useSearchParams();
 
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false)
+
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
   const email = params.get("email");
   const code = params.get("code");
+  const [isPending, startTransition] = useTransition();
+
   useEffect(() => {
     (async () => {
-      const response = await checkCode({ email, code, provider: "credentials"});
+      const response = await checkCode({
+        email,
+        code,
+        provider: "credentials",
+      });
       if (response && response.error) {
         router.push("/auth/signin");
       }
@@ -27,42 +33,44 @@ const ResetPassword = () => {
   }, [email, code, router]);
 
   const handleFormSubmit = async (formData) => {
-    setIsLoading(true);
-    const { password, confirm } = formData;
+    startTransition(async () => {
+      const { password, confirm } = formData;
 
-    if (password !== confirm) {
-      setError(true);
-      setSuccess(false);
-      setIsLoading(false);
-      setMessage("Enter same passwords");
-      return;
-    }
-
-    const isSavePass = await saveUser({ email, password, provider:"credentials" });
-    if (isSavePass && isSavePass.success) {
-     
-      const isSignin = await signIn("credentials", {
-        email,
-        callbackUrl: "/dashboard",
-        redirect: false,
-      });
-      if (isSignin.ok) {
-        setSuccess(true);
-        setError(false);
-        setIsLoading(false);
-        setMessage("Password saved successfully");
-        router.push("/dashboard");
-      }else{
-        setError(true)
+      if (password !== confirm) {
+        setError(true);
         setSuccess(false);
-        setMessage("Try Again Later");
+        setMessage("Enter same passwords");
+        return;
       }
-    } else {
-      setSuccess(false);
-      setError(true);
-      setIsLoading(false);
-      setMessage("Internal server error");
-    }
+
+      const isSavePass = await saveUser({
+        email,
+        password,
+        provider: "credentials",
+      });
+      if (isSavePass && isSavePass.success) {
+        const isSignin = await signIn("credentials", {
+          email,
+          callbackUrl: "/dashboard",
+          redirect: false,
+        });
+        if (isSignin.ok) {
+          setSuccess(true);
+          setError(false);
+
+          setMessage("Password saved successfully");
+          router.push("/dashboard");
+        } else {
+          setError(true);
+          setSuccess(false);
+          setMessage("Try Again Later");
+        }
+      } else {
+        setSuccess(false);
+        setError(true);
+        setMessage("Internal server error");
+      }
+    });
   };
   const resetPasswordFields = [
     {
@@ -96,7 +104,7 @@ const ResetPassword = () => {
         footerText="Already Remembered?"
         footerLinkText="Sign In"
         footerLinkHref="/auth/signin"
-        isLoading={isLoading}
+        isLoading={isPending}
       />
     </div>
   );

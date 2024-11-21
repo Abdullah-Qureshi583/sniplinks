@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import Form from "./Form";
 import { useSearchParams } from "next/navigation";
 import { checkCode } from "@/actions/auth/checkCode";
@@ -12,49 +12,53 @@ const GetCode = () => {
 
   const router = useRouter();
   const [error, setError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
   let process = params.get("process");
+  const [isPending, startTransition] = useTransition();
 
-  const handleFormSubmit = async (formData) => {
-    setIsLoading(true);
-    let { code } = formData;
-    let email = params.get("email");
+  const handleFormSubmit = (formData) => {
+    startTransition(async () => {
+      let { code } = formData;
+      let email = params.get("email");
 
-    const response = await checkCode({ email, code, provider: "credentials" });
-    if (response) {
-      if (response.message) {
-        setMessage(response.message);
-      }
-      if (response.success) {
-        setSuccess(true);
-        setError(false);
-        setIsLoading(false);
-        if (response.isUpdated == false) {
-          const isSignin = await signIn("credentials", {
-            email,
-            callbackUrl: "/dashboard",
-            redirect: false,
-          });
-          if (isSignin.ok) {
-            router.push("/dashboard");
-          } else {
-            setError(true);
-            setSuccess(false);
-            setMessage("Try Again Later");
+      const response = await checkCode({
+        email,
+        code,
+        provider: "credentials",
+      });
+      if (response) {
+        if (response.message) {
+          setMessage(response.message);
+        }
+        if (response.success) {
+          setSuccess(true);
+          setError(false);
+
+          if (response.isUpdated == false) {
+            const isSignin = await signIn("credentials", {
+              email,
+              callbackUrl: "/dashboard",
+              redirect: false,
+            });
+            if (isSignin.ok) {
+              router.push("/dashboard");
+            } else {
+              setError(true);
+              setSuccess(false);
+              setMessage("Try Again Later");
+            }
           }
+          // if the user is reseting password
+          else {
+            router.push(`/auth/reset?email=${email}&code=${code}`);
+          }
+        } else {
+          setSuccess(false);
+          setError(true);
         }
-        // if the user is reseting password
-        else {
-          router.push(`/auth/reset?email=${email}&code=${code}`);
-        }
-      } else {
-        setSuccess(false);
-        setError(true);
-        setIsLoading(false);
       }
-    }
+    });
   };
 
   const getCodeFields = [
@@ -90,7 +94,7 @@ const GetCode = () => {
         footerText="Already Remembered?"
         footerLinkText="Sign In"
         footerLinkHref="/auth/signin"
-        isLoading={isLoading}
+        isLoading={isPending}
       />
     </div>
   );

@@ -14,7 +14,6 @@ const Home = () => {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
-  // const [shortCode, setShortCode] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isCopyDone, setIsCopyDone] = useState(false);

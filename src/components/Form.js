@@ -10,6 +10,7 @@ import {
 import { IoEyeOutline } from "react-icons/io5";
 import { CiCircleCheck } from "react-icons/ci";
 import { signIn } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 
 const Form = ({
   title,
@@ -135,9 +136,16 @@ const Form = ({
         <button
           disabled={isLoading}
           type="submit"
-          className="w-full py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          className={`disabled:bg-blue-400 disabled:text-gray-100 w-full py-2.5 flex justify-center items-center gap-x-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800`}
         >
-          {buttonText}
+          {isLoading && <Loader2 size={20} />}
+          {isLoading ? (
+            <>
+              <p>Loading...</p>
+            </>
+          ) : (
+            buttonText
+          )}
         </button>
       </form>
       {moreOptions && (

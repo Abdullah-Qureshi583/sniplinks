@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState,useTransition } from "react";
 import Form from "./Form";
 import { handleSignin } from "@/actions/auth/handlers/handleSignin";
 import { useRouter } from "next/navigation";
@@ -7,14 +7,14 @@ import { signIn } from "next-auth/react";
 
 const Signin = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
 
+  const [isPending, startTransition] = useTransition();
   const handleFormSubmit = async (formData) => {
+    startTransition(async () => {
     const { email, password } = formData;
-    setIsLoading(true);
     let response = await handleSignin({ ...formData, provider: "credentials" });
 
     if (response) {
@@ -28,23 +28,21 @@ const Signin = () => {
         if (isSignin.ok) {
           setError(false);
           setSuccess(true);
-          setIsLoading(false);
           router.push("/dashboard");
         } else {
           setSuccess(false);
           setError(true);
-          setIsLoading(false);
           setMessage("Try Again Later");
         }
       } else {
         setSuccess(false);
         setError(true);
-        setIsLoading(false);
       }
       if (response.message) {
         setMessage(response.message);
       }
     } 
+  });
   };
 
   const signInFields = [
@@ -82,7 +80,7 @@ const Signin = () => {
         footerText="Don't have an Account?"
         footerLinkText="Sign Up"
         footerLinkHref="/auth/signup"
-        isLoading={isLoading}
+        isLoading={isPending}
       />
     </div>
   );

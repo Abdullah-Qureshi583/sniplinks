@@ -59,7 +59,7 @@ const UrlAnalyticsContent = () => {
         console.error("Error fetching user URLs:", error);
       }
     })();
-  }, [email, provider]);
+  }, [email, provider,router]);
 
   // set the selcted url data that match the selected Url
   useEffect(() => {
