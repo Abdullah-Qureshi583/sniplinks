@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, Copy } from "lucide-react";
+import { Link2, Copy, Loader2, Link2Icon } from "lucide-react";
 import { FaCircle, FaExclamationTriangle } from "react-icons/fa";
 import { CiCircleCheck } from "react-icons/ci";
 import Link from "next/link";
@@ -19,26 +19,30 @@ const Home = () => {
   const [success, setSuccess] = useState("");
   const [isCopyDone, setIsCopyDone] = useState(false);
   const inputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
+
+  // if the url is changed!
   useEffect(() => {
     setError("");
     setSuccess("");
     setShortUrl("");
+    setLoading(false);
   }, [url]);
 
   const handleSubmit = async () => {
-    console.log("the url is", url);
-    let response = await generateGuestShortUrl(url);
-    console.log("the response gone to generate guest url", response);
-    if (response && response.success) {;
-      setShortUrl(response.shortUrl);
-      // setShortCode(response.shortCode);
-      setSuccess(response);
-
-      // setUrl("");
-    } else {
-      setError(response);
-    }
+    startTransition(async () => {
+      setLoading(true);
+      let response = await generateGuestShortUrl(url);
+      if (response && response.success) {
+        setShortUrl(response.shortUrl);
+        setSuccess(response);
+      } else {
+        setLoading(false);
+        setError(response);
+      }
+    });
   };
 
   const copyToClipboard = async (text) => {
@@ -105,7 +109,7 @@ const Home = () => {
               {/* </Link> */}
             </Button>
             <Button variant="outline" asChild size="lg">
-              <Link className="text-zinc-600" href="/about">
+              <Link className="text-zinc-600" href="/features">
                 Learn More
               </Link>
             </Button>
@@ -126,6 +130,7 @@ const Home = () => {
 
             <div className="space-y-4">
               <Input
+              disabled={isPending}
                 ref={inputRef} // Attach the ref to the input element
                 onClick={() => {
                   inputRef.current.select(); // Select the input's text when clicked
@@ -157,15 +162,27 @@ const Home = () => {
                   )}
                 </div>
               ) : (
-                
                 ""
               )}
 
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading || isPending}
               >
-                Shorten URL
+                {loading ? (
+                  <>Change Url</>
+                ) : isPending ? (
+                  <>
+                    <Loader2 size={16} />
+                    Shortening URL
+                  </>
+                ) : (
+                  <>
+                    <Link2Icon size={16} />
+                    Shorten URL
+                  </>
+                )}
               </Button>
               {/* if there get any erro rshow here */}
               {error ? (

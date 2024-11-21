@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -10,6 +10,7 @@ import {
   BarChart3,
   List,
   Copy,
+  Loader2,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -38,17 +39,19 @@ const Shorten = () => {
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [isCopyDone, setIsCopyDone] = useState(false);
   const [shortUrl, setShortUrl] = useState("");
+  //set as when the input change it will false  and show change url if true
   const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const inputRef = useRef(null);
 
   const { data: session } = useSession();
-  
+
   useEffect(() => {
     if (session == null && session !== undefined) {
       redirect("/");
     }
-  }, [session])
-  
+  }, [session]);
+
   const email = session?.user?.email;
   const provider = session?.user?.provider;
 
@@ -82,75 +85,79 @@ const Shorten = () => {
 
   // handler to submit data to server
   const handleSubmit = async () => {
-    setLoading(true);
-    // first check if the user long url is same as some one's short url?
-    const isLongUrlSameAsShort = await checkShortUrl(longUrl);
-    if (isLongUrlSameAsShort && isLongUrlSameAsShort.success) {
-      setAlert({
-        type: "error",
-        message: "This URL is already a shortened URL",
-      });
-      setLoading(false);
-      return;
-    } else {
-      if (customUrl.length > 0) {
-        const shortUrl = `${hostName}/${customUrl}`;
-        const isCustomExist = await checkShortUrl(shortUrl);
-        // if custom url is already exist
-        if (isCustomExist && isCustomExist.success) {
-          // thorow an error message
-          setAlert({
-            type: "error",
-            message: "This custom URL is already taken",
-          });
-          setLoading(false);
-          return;
+    startTransition(async () => {
+      setLoading(true);
+      // first check if the user long url is same as some one's short url?
+      const isLongUrlSameAsShort = await checkShortUrl(longUrl);
+      if (isLongUrlSameAsShort && isLongUrlSameAsShort.success) {
+        setAlert({
+          type: "error",
+          message: "This URL is already a shortened URL",
+        });
+        setLoading(false);
+        return;
+      } else {
+        if (customUrl.length > 0) {
+          const shortUrl = `${hostName}/${customUrl}`;
+          const isCustomExist = await checkShortUrl(shortUrl);
+          // if custom url is already exist
+          if (isCustomExist && isCustomExist.success) {
+            // thorow an error message
+            setAlert({
+              type: "error",
+              message: "This custom URL is already taken",
+            });
+            setLoading(false);
+            return;
+          } else {
+            // generate the url with custom short url and show success message
+            const userUrl = await generateTrackShortUrl({
+              email,
+              provider,
+              longUrl,
+              userShortCode: customUrl,
+            });
+            if (userUrl && userUrl.success && userUrl.shortUrl) {
+              setShortUrl(userUrl.shortUrl);
+              setAlert({
+                type: "success",
+                message: "URL shortened successfully!",
+              });
+            }
+          }
         } else {
-          // generate the url with custom short url and show success message
+          // generate the url with random short url and show success message
           const userUrl = await generateTrackShortUrl({
             email,
             provider,
             longUrl,
-            userShortCode: customUrl,
           });
+
           if (userUrl && userUrl.success && userUrl.shortUrl) {
             setShortUrl(userUrl.shortUrl);
             setAlert({
               type: "success",
               message: "URL shortened successfully!",
             });
+          } else {
+            setAlert({
+              type: "error",
+              message: "Failed to shorten the URL Try Again!",
+            });
+            setLoading(false);
           }
         }
-      } else {
-        // generate the url with random short url and show success message
-        const userUrl = await generateTrackShortUrl({
-          email,
-          provider,
-          longUrl,
-        });
-
-        if (userUrl && userUrl.success && userUrl.shortUrl) {
-          setShortUrl(userUrl.shortUrl);
-          setAlert({
-            type: "success",
-            message: "URL shortened successfully!",
-          });
-        } else {
-          setAlert({
-            type: "error",
-            message: "Failed to shorten the URL Try Again!",
-          });
-          setLoading(false);
-        }
       }
-    }
+    });
   };
 
   return (
     <div className="max-w-4xl min-h-screen pt-[68px] mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl text-blue-800 font-bold">URL Shortener</CardTitle>
+          <CardTitle className="text-2xl text-blue-800 font-bold">
+            URL Shortener
+          </CardTitle>
           <CardDescription>
             Create short, memorable links for your long URLs
           </CardDescription>
@@ -166,7 +173,7 @@ const Shorten = () => {
                 onClick={() => {
                   inputRef.current.select(); // Select the input's text when clicked
                 }}
-                // disabled={loading}
+                disabled={isPending}
                 type="url"
                 placeholder="https://example.com/very-long-url"
                 value={longUrl}
@@ -177,6 +184,7 @@ const Shorten = () => {
 
             <div className="flex items-center gap-2">
               <Button
+                disabled={isPending}
                 type="button"
                 variant="outline"
                 onClick={() => setShowCustomInput(!showCustomInput)}
@@ -197,6 +205,7 @@ const Shorten = () => {
                   Custom short URL
                 </label>
                 <Input
+                  disabled={isPending}
                   type="text"
                   placeholder="custom-name without spaces"
                   value={customUrl}
@@ -210,10 +219,15 @@ const Shorten = () => {
             <Button
               type="submit"
               className="w-full flex bg-blue-600 hover:bg-blue-700  items-center justify-center gap-2"
-              disabled={loading}
+              disabled={loading || isPending}
             >
               {loading ? (
                 <>Change Url</>
+              ) : isPending ? (
+                <>
+                  <Loader2 size={16} />
+                  Shortening URL
+                </>
               ) : (
                 <>
                   <Link size={16} />
@@ -301,7 +315,6 @@ const Shorten = () => {
 
 export default Shorten;
 
-
 // "use client"
 // import React, { useState } from 'react';
 // import { Input } from '@/components/ui/input';
@@ -330,10 +343,10 @@ export default Shorten;
 
 //     // In a real app, this would be an API call
 //     const baseUrl = 'https://short.url/';
-//     const alias = customAlias 
-//       ? customAlias 
+//     const alias = customAlias
+//       ? customAlias
 //       : Math.random().toString(36).substring(2, 7);
-    
+
 //     setShortenedUrl(`${baseUrl}${alias}`);
 //     setError('');
 //   };
@@ -350,12 +363,12 @@ export default Shorten;
 //         <h1 className="text-2xl font-bold text-blue-800 mb-6 text-center">
 //           URL Shortener
 //         </h1>
-        
+
 //         <div className="mb-4">
 //           <label htmlFor="originalUrl" className="block text-blue-700 mb-2">
 //             Original URL
 //           </label>
-//           <Input 
+//           <Input
 //             id="originalUrl"
 //             type="text"
 //             placeholder="Enter your long URL"
@@ -364,14 +377,14 @@ export default Shorten;
 //             className="w-full border-blue-300 focus:ring-blue-500 focus:border-blue-500"
 //           />
 //         </div>
-        
+
 //         <div className="mb-4">
 //           <label htmlFor="customAlias" className="block text-blue-700 mb-2">
 //             Custom Alias (Optional)
 //           </label>
 //           <div className="flex">
 //             <div className="mr-2 flex-grow">
-//               <Input 
+//               <Input
 //                 id="customAlias"
 //                 type="text"
 //                 placeholder="Create custom short URL"
@@ -385,33 +398,33 @@ export default Shorten;
 //             </div>
 //           </div>
 //         </div>
-        
+
 //         {error && (
 //           <div className="mb-4 text-red-600 text-sm text-center">
 //             {error}
 //           </div>
 //         )}
-        
-//         <Button 
+
+//         <Button
 //           onClick={handleShorten}
 //           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
 //         >
 //           <LinkIcon className="mr-2" /> Shorten URL
 //         </Button>
-        
+
 //         {shortenedUrl && (
 //           <div className="mt-4 bg-blue-50 p-3 rounded flex justify-between items-center">
-//             <a 
-//               href={shortenedUrl} 
-//               target="_blank" 
+//             <a
+//               href={shortenedUrl}
+//               target="_blank"
 //               rel="noopener noreferrer"
 //               className="text-blue-800 truncate mr-2"
 //             >
 //               {shortenedUrl}
 //             </a>
-//             <Button 
-//               variant="ghost" 
-//               size="sm" 
+//             <Button
+//               variant="ghost"
+//               size="sm"
 //               onClick={copyToClipboard}
 //               className="text-blue-600 hover:bg-blue-100"
 //             >
