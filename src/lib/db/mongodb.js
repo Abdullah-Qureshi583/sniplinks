@@ -7,8 +7,9 @@ const connectDB = async () => {
     return; // Already connected
   }
   try {
-    await mongoose.connect(process.env.MONGO_URI); // Just pass the URI
-    console.log("MongoDB connected");
+    console.log("before connect to mongoose");
+    const a = await mongoose.connect(process.env.MONGO_URI); // Just pass the URI
+    console.log("MongoDB connected", a);
   } catch (err) {
     console.error("MongoDB connection error:", err);
   }
