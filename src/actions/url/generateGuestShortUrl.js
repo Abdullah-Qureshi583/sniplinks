@@ -8,7 +8,9 @@ const generateGuestShortUrl = async (longUrl) => {
   try {
     console.log("try block is running!");
     await connectDB();
+    console.log("connect to db ")
     //check if the url is already exist in guest user if it exists return its saved shorl url
+    console.log("before longurlexists")
     const longUrlExist = await GuestUser.findOne({ longUrl });
     console.log("longuser exist is  " + longUrlExist)
 
