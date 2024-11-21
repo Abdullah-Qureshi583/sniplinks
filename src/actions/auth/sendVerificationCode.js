@@ -15,7 +15,11 @@ const sendVerificationCode = async ({ email, code }) => {
   // Check if required environment variables are set
   if (!process.env.EMAIL || !process.env.EMAIL_PASSWORD) {
     console.error("Missing EMAIL or EMAIL_PASSWORD environment variables.");
-    return { success: false, message: "Server configuration error", error: true };
+    return {
+      success: false,
+      message: "Server configuration error",
+      error: true,
+    };
   }
 
   const mailOptions = {
@@ -32,8 +36,8 @@ const sendVerificationCode = async ({ email, code }) => {
 
   try {
     // Attempt to send the email
-    // await transporter.sendMail(mailOptions);
-    console.log("the email code is " , code)
+    await transporter.sendMail(mailOptions);
+    console.log("the email code is ", code);
     return { success: true, message: "Email sent successfully", error: false };
   } catch (error) {
     console.error("Error sending email:", error);
