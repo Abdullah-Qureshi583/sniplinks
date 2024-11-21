@@ -8,6 +8,7 @@ const connectDB = async () => {
   }
   try {
     console.log("before connect to mongoose");
+    console.log("the mongo uri is : " + process.env.MONGO_URI)
     const a = await mongoose.connect(process.env.MONGO_URI); // Just pass the URI
     console.log("MongoDB connected", a);
   } catch (err) {
