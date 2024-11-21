@@ -27,6 +27,7 @@ const Home = () => {
   }, [url]);
 
   const handleSubmit = async () => {
+    console.log("the url is", url);
     let response = await generateGuestShortUrl(url);
     console.log("the response gone to generate guest url", response);
     if (response && response.success) {;
