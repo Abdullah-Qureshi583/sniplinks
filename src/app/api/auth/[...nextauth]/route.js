@@ -7,7 +7,9 @@ import GoogleProvider from "next-auth/providers/google";
 
 import { checkUserVerified } from "@/actions/auth/checkUserVerified";
 import { saveUser } from "@/actions/auth/saveUser";
+console.log("the auth secret is ",  process.env.NEXTAUTH_SECRET)
 const handler = NextAuth({
+
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GithubProvider({
