@@ -6,13 +6,9 @@ import TrackUser from "@/models/url/TrackUser";
 
 const generateGuestShortUrl = async (longUrl) => {
   try {
-    console.log("try block is running!");
     await connectDB();
-    console.log("connect to db ")
     //check if the url is already exist in guest user if it exists return its saved shorl url
-    console.log("before longurlexists")
     const longUrlExist = await GuestUser.findOne({ longUrl });
-    console.log("longuser exist is  " + longUrlExist)
 
     if (longUrlExist) {
       return {
@@ -20,7 +16,7 @@ const generateGuestShortUrl = async (longUrl) => {
         error: false,
         shortCode: longUrlExist.shortCode,
         shortUrl: longUrlExist.shortUrl,
-        message: "This is also available in the database", // this is just for testing
+        message: "URl create successfully!", // Thsi user is also in db so updating it
       };
     }
     // Generate a random short code
@@ -48,14 +44,14 @@ const generateGuestShortUrl = async (longUrl) => {
       error: false,
       shortCode,
       shortUrl,
-      message: "Success",
+      message: "URl create successfully!", 
     };
   } catch (err) {
     console.log("Error saving url:", err.message);
     return {
       success: false,
       error: true,
-      message: err.message,
+      message: "Internal Server Error"
     };
   }
 };
