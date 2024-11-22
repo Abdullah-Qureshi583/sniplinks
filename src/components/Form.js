@@ -54,7 +54,7 @@ const Form = ({
   };
 
   return (
-    <div className="w-full max-w-md  mx-auto   inset-0 -z-50 bg-opacity-40 backdrop-blur-xl bg-white/10  rounded-lg shadow-xl p-6 md:py-4 md:px-8 space-y-2 ">
+    <div className=" max-w-sm  mx-auto   inset-0 -z-50 bg-opacity-40 backdrop-blur-xl bg-white/10  rounded-lg shadow-xl p-6 md:py-4 md:px-8 space-y-2 ">
       <h1 className="text-2xl font-bold text-gray-900 text-center">{title}</h1>
       <h3 className="text-center text-md   px-2 ">{description}</h3>
       <form action={handleFormSubmit} className="space-y-4">
